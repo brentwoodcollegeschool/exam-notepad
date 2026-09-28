@@ -9,12 +9,13 @@ working once Google removed the Chrome Apps platform.
 
 ## Features
 
-- Full-screen, distraction-free plain-text editor
+- Full-screen, distraction-free plain-text editor (no separate fullscreen toggle — it's meant to
+  be run as a single-app ChromeOS kiosk, which is already fullscreen; see SETUP.md)
 - Open and save `.txt` files straight to disk or a USB drive
 - Clean printing (toolbar and UI are hidden on the printed page)
-- Insert a Name/Date/Class header, or the current word count, with one click
 - Insert accented letters and special characters
-- Adjustable text size, line spacing, and light/dark theme
+- Optional line-number gutter (never appears when printed)
+- Live line, word, and character counts in the status bar
 - Auto-saves your draft locally as you type, and offers to restore it if the page is closed or
   crashes before you save
 - **Read Aloud** — text-to-speech for the whole document or just the selected text, with voice

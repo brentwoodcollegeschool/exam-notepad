@@ -37,18 +37,12 @@
     <div class="toolbar-group">
       <button id="btnUndo" class="btn" title="Undo (Ctrl+Z)">Undo</button>
       <button id="btnRedo" class="btn" title="Redo (Ctrl+Y)">Redo</button>
-      <button id="btnHeader" class="btn" title="Insert a name/date/class header (Ctrl+T)">Insert Header</button>
-      <button id="btnWordCount" class="btn" title="Insert word count at end of document (Ctrl+Shift+C)">Insert Word Count</button>
       <button id="btnSpecialChars" class="btn" title="Insert accented and special characters">Special Characters</button>
     </div>
     <div class="toolbar-divider"></div>
     <div class="toolbar-group">
-      <button id="btnFontMinus" class="btn" title="Smaller text (Ctrl -)">A&minus;</button>
-      <button id="btnFontPlus" class="btn" title="Larger text (Ctrl +)">A&plus;</button>
-      <button id="btnLineMinus" class="btn" title="Tighter line spacing">Line&minus;</button>
-      <button id="btnLinePlus" class="btn" title="Wider line spacing">Line&plus;</button>
+      <button id="btnLineNumbers" class="btn" title="Toggle line numbers">Line Numbers</button>
       <button id="btnTheme" class="btn" title="Toggle light/dark theme">Theme</button>
-      <button id="btnFullscreen" class="btn" title="Toggle fullscreen">Fullscreen</button>
     </div>
     <div class="toolbar-divider"></div>
     <div class="toolbar-group">
@@ -73,15 +67,22 @@
   </header>
 
   <main>
-    <textarea
-      id="editor"
-      spellcheck="true"
-      autofocus
-      autocapitalize="sentences"
-      aria-label="Exam text editor"
-      placeholder="Start writing…"
-    ></textarea>
+    <div id="editorWrap" class="editor-wrap">
+      <div id="lineNumbers" class="line-numbers no-print hidden" aria-hidden="true"></div>
+      <textarea
+        id="editor"
+        spellcheck="true"
+        autofocus
+        autocapitalize="sentences"
+        aria-label="Exam text editor"
+        placeholder="Start writing…"
+      ></textarea>
+    </div>
   </main>
+
+  <!-- Hidden element used only to measure how each line wraps, so the line
+       number gutter lines up with wrapped rows and not just raw newlines. -->
+  <div id="lineMirror" class="line-mirror" aria-hidden="true"></div>
 
   <!--
     Chrome only prints the currently-visible/scrolled portion of a <textarea>,
@@ -92,6 +93,7 @@
   <div id="printFooter" aria-hidden="true"></div>
 
   <footer class="statusbar no-print">
+    <span id="lineCount">0 lines</span>
     <span id="wordCount">0 words</span>
     <span id="charCount">0 characters</span>
     <span id="dictateStatus" class="status-flex"></span>
@@ -109,10 +111,10 @@
         <h3>Writing</h3>
         <ul>
           <li><b>New</b> — start a blank document</li>
-          <li><b>Insert Header</b> (Ctrl+T) — adds a Name / Date / Class block at the top</li>
-          <li><b>Insert Word Count</b> (Ctrl+Shift+C) — adds the current word count at the end</li>
           <li><b>Special Characters</b> — click to insert accented letters and symbols</li>
+          <li><b>Line Numbers</b> — toggle a line-number gutter on or off (never appears when printed)</li>
           <li>Spelling is checked by your browser's built-in spellchecker (red underline)</li>
+          <li>Line, word, and character counts are always shown at the bottom of the screen</li>
         </ul>
         <h3>Saving, Opening &amp; Printing</h3>
         <ul>
@@ -124,10 +126,8 @@
         </ul>
         <h3>Display</h3>
         <ul>
-          <li><b>A&minus; / A&plus;</b> (Ctrl &minus; / Ctrl +) — change text size, <b>Ctrl 0</b> resets it</li>
-          <li><b>Line&minus; / Line&plus;</b> — change line spacing</li>
+          <li>Text size can be adjusted with <b>Ctrl +</b> / <b>Ctrl &minus;</b>, and reset with <b>Ctrl 0</b></li>
           <li><b>Theme</b> — switch between light and dark</li>
-          <li><b>Fullscreen</b> — hide the browser chrome for a distraction-free view</li>
         </ul>
         <h3>Speech</h3>
         <ul>

@@ -2,6 +2,9 @@
   "use strict";
 
   const editor = document.getElementById("editor");
+  const lineNumbersEl = document.getElementById("lineNumbers");
+  const lineMirror = document.getElementById("lineMirror");
+  const lineCountEl = document.getElementById("lineCount");
   const wordCountEl = document.getElementById("wordCount");
   const charCountEl = document.getElementById("charCount");
   const saveStatusEl = document.getElementById("saveStatus");
@@ -24,14 +27,14 @@
   const DRAFT_KEY = "examNotepad.draft.v1";
   const THEME_KEY = "examNotepad.theme";
   const FONT_KEY = "examNotepad.fontSize";
-  const LINE_KEY = "examNotepad.lineHeight";
+  const LINE_NUMBERS_KEY = "examNotepad.lineNumbers";
 
   const FONT_MIN = 12, FONT_MAX = 40, FONT_STEP = 2, FONT_DEFAULT = 18;
-  const LINE_MIN = 1.2, LINE_MAX = 2.6, LINE_STEP = 0.2, LINE_DEFAULT = 1.6;
 
   let fileHandle = null;
   let dirty = false;
   let autosaveTimer = null;
+  let lineNumberTimer = null;
 
   // ---------- Toast ----------
   let toastTimer = null;
@@ -42,12 +45,15 @@
     toastTimer = setTimeout(() => toastEl.classList.add("hidden"), ms);
   }
 
-  // ---------- Status / word count ----------
+  // ---------- Status / word / line count ----------
   function updateStatus() {
     const text = editor.value;
+    const lines = text ? text.split("\n").length : 0;
     const words = text.trim() ? text.trim().split(/\s+/).length : 0;
+    lineCountEl.textContent = `${lines} line${lines === 1 ? "" : "s"}`;
     wordCountEl.textContent = `${words} word${words === 1 ? "" : "s"}`;
     charCountEl.textContent = `${text.length} character${text.length === 1 ? "" : "s"}`;
+    scheduleLineNumberUpdate();
   }
 
   function markDirty() {
@@ -262,35 +268,15 @@
     }
   }
 
-  function insertHeaderTemplate() {
-    const template =
-      "Name: _______________________________     Date: ________________\n" +
-      "Class: ______________________________     Teacher: ______________\n" +
-      "------------------------------------------------------------\n\n";
-    editor.focus();
-    editor.setSelectionRange(0, 0);
-    insertAtCursor(template);
-    editor.setSelectionRange(template.length, template.length);
-  }
-
-  function insertWordCount() {
-    const text = editor.value;
-    const words = text.trim() ? text.trim().split(/\s+/).length : 0;
-    editor.focus();
-    editor.setSelectionRange(text.length, text.length);
-    insertAtCursor(`\n\nWord Count: ${words}`);
-  }
-
-  document.getElementById("btnHeader").addEventListener("click", insertHeaderTemplate);
-  document.getElementById("btnWordCount").addEventListener("click", insertWordCount);
-
-  // ---------- Font size / line height ----------
+  // ---------- Font size ----------
+  // No toolbar buttons for this (kept off the toolbar deliberately), but the
+  // keyboard shortcuts still work — mainly so text size stays reachable as
+  // an accessibility fallback without cluttering the UI.
   let fontSize = parseInt(localStorage.getItem(FONT_KEY), 10) || FONT_DEFAULT;
-  let lineHeight = parseFloat(localStorage.getItem(LINE_KEY)) || LINE_DEFAULT;
 
   function applyEditorStyle() {
     document.documentElement.style.setProperty("--font-size", fontSize + "px");
-    document.documentElement.style.setProperty("--line-height", String(lineHeight));
+    scheduleLineNumberUpdate();
   }
 
   function changeFontSize(delta) {
@@ -305,18 +291,68 @@
     applyEditorStyle();
   }
 
-  function changeLineHeight(delta) {
-    lineHeight = Math.min(LINE_MAX, Math.max(LINE_MIN, +(lineHeight + delta).toFixed(2)));
-    localStorage.setItem(LINE_KEY, String(lineHeight));
-    applyEditorStyle();
+  applyEditorStyle();
+
+  // ---------- Line numbers ----------
+  let lineNumbersVisible = localStorage.getItem(LINE_NUMBERS_KEY) !== "false";
+
+  function computeLineHeightPx() {
+    const lh = parseFloat(getComputedStyle(editor).lineHeight);
+    return Number.isFinite(lh) && lh > 0 ? lh : parseFloat(getComputedStyle(editor).fontSize) * 1.2;
   }
 
-  document.getElementById("btnFontMinus").addEventListener("click", () => changeFontSize(-FONT_STEP));
-  document.getElementById("btnFontPlus").addEventListener("click", () => changeFontSize(FONT_STEP));
-  document.getElementById("btnLineMinus").addEventListener("click", () => changeLineHeight(-LINE_STEP));
-  document.getElementById("btnLinePlus").addEventListener("click", () => changeLineHeight(LINE_STEP));
+  function syncMirrorBox() {
+    const cs = getComputedStyle(editor);
+    lineMirror.style.width = editor.clientWidth + "px";
+    lineMirror.style.boxSizing = "border-box";
+    lineMirror.style.paddingLeft = cs.paddingLeft;
+    lineMirror.style.paddingRight = cs.paddingRight;
+    lineMirror.style.fontFamily = cs.fontFamily;
+    lineMirror.style.fontSize = cs.fontSize;
+    lineMirror.style.letterSpacing = cs.letterSpacing;
+  }
 
-  applyEditorStyle();
+  function updateLineNumbers() {
+    if (!lineNumbersVisible) return;
+    syncMirrorBox();
+    const lineHeightPx = computeLineHeightPx();
+    const lines = editor.value.split("\n");
+    const rowsOut = [];
+    for (let i = 0; i < lines.length; i++) {
+      lineMirror.textContent = lines[i].length ? lines[i] : " ";
+      const rows = Math.max(1, Math.round(lineMirror.scrollHeight / lineHeightPx));
+      rowsOut.push(String(i + 1));
+      for (let r = 1; r < rows; r++) rowsOut.push("");
+    }
+    lineNumbersEl.textContent = rowsOut.join("\n");
+    lineNumbersEl.scrollTop = editor.scrollTop;
+  }
+
+  function scheduleLineNumberUpdate() {
+    if (!lineNumbersVisible) return;
+    clearTimeout(lineNumberTimer);
+    lineNumberTimer = setTimeout(updateLineNumbers, 150);
+  }
+
+  function setLineNumbersVisible(visible) {
+    lineNumbersVisible = visible;
+    localStorage.setItem(LINE_NUMBERS_KEY, String(visible));
+    lineNumbersEl.classList.toggle("hidden", !visible);
+    document.getElementById("btnLineNumbers").classList.toggle("active", visible);
+    if (visible) updateLineNumbers();
+  }
+
+  document.getElementById("btnLineNumbers").addEventListener("click", () => {
+    setLineNumbersVisible(!lineNumbersVisible);
+  });
+
+  editor.addEventListener("scroll", () => {
+    if (lineNumbersVisible) lineNumbersEl.scrollTop = editor.scrollTop;
+  });
+
+  window.addEventListener("resize", () => scheduleLineNumberUpdate());
+
+  setLineNumbersVisible(lineNumbersVisible);
 
   // ---------- Theme ----------
   function applyTheme(theme) {
@@ -327,15 +363,6 @@
   document.getElementById("btnTheme").addEventListener("click", () => {
     const dark = document.body.classList.toggle("theme-dark");
     localStorage.setItem(THEME_KEY, dark ? "dark" : "light");
-  });
-
-  // ---------- Fullscreen ----------
-  document.getElementById("btnFullscreen").addEventListener("click", () => {
-    if (!document.fullscreenElement) {
-      document.documentElement.requestFullscreen().catch(() => {});
-    } else {
-      document.exitFullscreen();
-    }
   });
 
   // ---------- Wake Lock (keep screen on) ----------
@@ -556,8 +583,6 @@
     if (k === "s" && e.shiftKey) { e.preventDefault(); saveFile(true); }
     else if (k === "s") { e.preventDefault(); saveFile(false); }
     else if (k === "o" && e.shiftKey) { e.preventDefault(); openFile(); }
-    else if (k === "t") { e.preventDefault(); insertHeaderTemplate(); }
-    else if (k === "c" && e.shiftKey) { e.preventDefault(); insertWordCount(); }
     else if (k === "=" || k === "+") { e.preventDefault(); changeFontSize(FONT_STEP); }
     else if (k === "-") { e.preventDefault(); changeFontSize(-FONT_STEP); }
     else if (k === "0") { e.preventDefault(); resetFontSize(); }
