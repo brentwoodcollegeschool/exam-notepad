@@ -255,7 +255,7 @@ body.theme-dark .banner {
 ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 6px; }
 
 /* Print */
-.print-only, #printFooter { display: none; }
+.print-only { display: none; }
 
 @media print {
   html, body {
@@ -269,7 +269,6 @@ body.theme-dark .banner {
   .print-only {
     display: block !important;
     padding-top: 0.25in !important;
-    padding-bottom: 0.4in !important;
     font-size: 12pt !important;
     line-height: 1.5 !important;
     color: #000000 !important;
@@ -279,16 +278,18 @@ body.theme-dark .banner {
     font-family: var(--editor-font-family) !important;
     font-variant-numeric: lining-nums tabular-nums !important;
   }
-  #printFooter {
-    display: block !important;
-    position: fixed !important;
-    bottom: 0.15in !important;
-    left: 0 !important;
-    right: 0 !important;
+  /* Sits in the normal page flow (not a fixed per-page corner), so it can't
+     collide with whatever Chrome's own print header/footer is showing —
+     that's a per-device, per-browser-profile setting we have no control
+     over and can't predict. */
+  #printStats {
+    margin-top: 0.3in !important;
+    padding-top: 8px !important;
+    border-top: 1px solid #ccc !important;
     font-size: 9pt !important;
-    color: #444 !important;
+    line-height: 1.4 !important;
+    color: #555 !important;
     font-family: var(--font-family) !important;
-    text-align: center !important;
   }
   @page { margin: 1in; }
 }

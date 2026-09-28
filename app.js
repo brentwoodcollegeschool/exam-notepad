@@ -222,20 +222,17 @@
   // the full value into a plain element right before printing so the whole
   // document — not just what's currently on screen — ends up on the page.
   const printOutput = document.getElementById("printOutput");
-  const printFooter = document.getElementById("printFooter");
+  const printStats = document.getElementById("printStats");
   const originalTitle = document.title;
   window.addEventListener("beforeprint", () => {
-    printOutput.textContent = editor.value;
-    // A fixed-position element repeats on every printed page in Chrome, so
-    // this gives a consistent date/time stamp without relying on Chrome's
-    // own print header/footer (which can't show only date + page number —
-    // it's all four fields, including the page URL, or none of them).
-    printFooter.textContent = new Date().toLocaleString([], {
-      dateStyle: "medium",
-      timeStyle: "short",
-    });
+    const text = editor.value;
+    printOutput.textContent = text;
+    const lines = text ? text.split("\n").length : 0;
+    const words = text.trim() ? text.trim().split(/\s+/).length : 0;
+    printStats.textContent = `Lines: ${lines}   Words: ${words}   Characters: ${text.length}`;
     // Chrome's print header shows document.title verbatim; blank it in case
-    // headers/footers are turned on in the print dialog too.
+    // headers/footers are turned on in the print dialog too (date and page
+    // number there are Chrome's own, and not something this page controls).
     document.title = " ";
   });
   window.addEventListener("afterprint", () => {
