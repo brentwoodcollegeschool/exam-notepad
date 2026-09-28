@@ -46,6 +46,45 @@ Then open `http://localhost:8000` in Chrome. (Opening `index.html` directly with
 mostly works, but the File System Access API behaves more reliably over `http://localhost` or
 `https://`.)
 
+## Testing
+
+The school-managed Chromebooks this app runs on lock out DevTools, so there's no way to debug on
+the actual deployment hardware. Instead, there's an automated end-to-end test suite
+([Playwright](https://playwright.dev)) that drives a real Chromium browser from a dev machine and
+checks the app the same way a person would — no device access required.
+
+```
+npm install
+npx playwright install chromium   # first time only
+npm test
+```
+
+`tests/app.spec.js` covers:
+
+- **Regression guard for the exact bug class that's bitten this app before**: every element id
+  `app.js` looks up with `getElementById` is checked against the live DOM, and the page is checked
+  for zero console errors/uncaught exceptions on load. (This is what would have caught the
+  service-worker/stale-cache mismatch that silently broke Theme, Special Characters, Read Aloud,
+  and Dictate in an earlier version — a null-reference crash partway through the script had
+  silently skipped every listener registered after it.)
+- Every toolbar button is clickable without throwing
+- Line/word/character counts update correctly while typing
+- Special character insertion, undo
+- Theme toggle applies and persists across a reload
+- Font-size keyboard shortcuts (Ctrl +/−/0)
+- The recovery banner: shows a preview of a leftover draft, restores it, and discarding it clears
+  it for good (so it isn't handed to the next student who sits at the same Chromebook)
+- Autosave writes to local storage after the debounce
+- Printing: the full document (not just what's scrolled into view) gets mirrored into the print
+  view, and the page title is blanked and restored correctly around the print
+- Read Aloud and Dictate fail safely (no thrown errors) whether or not the browser supports them
+- Zero Content-Security-Policy violations during normal use
+- **The app still loads with the network fully disabled**, once it's been opened online at least
+  once — the actual point of the service worker, verified rather than assumed
+
+All 18 tests currently pass. Run this after any change before pushing, especially anything
+touching `app.js`, `index.html`'s element ids, or `sw.js`.
+
 ## Deploying
 
 This repo is deployed as a static site via **GitHub Pages** from the `main` branch. Once GitHub
