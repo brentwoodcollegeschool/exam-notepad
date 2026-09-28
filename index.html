@@ -9,7 +9,12 @@
 <link rel="icon" href="icons/favicon-32.png" sizes="32x32">
 <link rel="apple-touch-icon" href="icons/icon-192.png">
 <meta name="theme-color" content="#1a73e8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; base-uri 'none'; form-action 'none'; frame-ancestors 'none';">
+<!-- frame-ancestors and sandbox are deliberately omitted: the spec says
+     browsers ignore them when delivered via <meta> (only an HTTP response
+     header can set them), and GitHub Pages doesn't let us set custom
+     headers — so including them here would do nothing but log a harmless
+     but noisy console warning on every load. -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; base-uri 'none'; form-action 'none';">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>

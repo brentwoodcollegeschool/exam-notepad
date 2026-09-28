@@ -20,7 +20,18 @@ working once Google removed the Chrome Apps platform.
 - **Read Aloud** — text-to-speech for the whole document or just the selected text, with voice
   and speed controls
 - **Dictate** — speech-to-text typing at the cursor (needs an internet connection)
+- Works offline once it's been loaded at least once (except Dictate, which always needs a
+  connection) — a service worker caches the app itself, not your writing, which always saves
+  locally regardless of network
 - Usable as a ChromeOS kiosk app (see SETUP.md)
+
+## Deploying changes to this app
+
+**Whenever you change `index.html`, `style.css`, `app.js`, or anything else listed in `sw.js`'s
+`ASSETS`, bump `CACHE_NAME` in `sw.js` first** (e.g. `exam-notepad-v3` → `v4`). Each version's
+files are cached together as one atomic snapshot; if you forget to bump it, a device that's ever
+gone offline may keep serving the previous version's files indefinitely instead of picking up
+your change.
 
 ## Local development
 

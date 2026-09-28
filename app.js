@@ -513,20 +513,10 @@
     else if (k === "0") { e.preventDefault(); resetFontSize(); }
   });
 
-  // ---------- Service worker ----------
-  // Not registering one for now — while this app is still changing fast, a
-  // previously installed service worker can keep serving an old, mismatched
-  // copy of the page after a deploy. Actively clean up anything left over
-  // from earlier testing so nobody gets stuck on a stale version.
+  // ---------- Service worker (offline support) ----------
   if ("serviceWorker" in navigator) {
-    navigator.serviceWorker.getRegistrations().then((regs) => {
-      if (!regs.length) return;
-      Promise.all(regs.map((r) => r.unregister())).then(() => {
-        if ("caches" in window) {
-          caches.keys().then((keys) => Promise.all(keys.map((k) => caches.delete(k))));
-        }
-        location.reload();
-      });
+    window.addEventListener("load", () => {
+      navigator.serviceWorker.register("sw.js").catch(() => {});
     });
   }
 
