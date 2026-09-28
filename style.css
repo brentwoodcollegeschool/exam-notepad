@@ -278,18 +278,18 @@ body.theme-dark .banner {
     font-family: var(--editor-font-family) !important;
     font-variant-numeric: lining-nums tabular-nums !important;
   }
-  /* Sits in the normal page flow (not a fixed per-page corner), so it can't
-     collide with whatever Chrome's own print header/footer is showing —
-     that's a per-device, per-browser-profile setting we have no control
-     over and can't predict. */
+  /* Fixed-position elements repeat in the same spot on every printed page
+     in Chrome, so this sits in the bottom-left corner — the same corner
+     Chrome's own print footer uses for the page URL. */
   #printStats {
-    margin-top: 0.3in !important;
-    padding-top: 8px !important;
-    border-top: 1px solid #ccc !important;
+    display: block !important;
+    position: fixed !important;
+    left: 0 !important;
+    bottom: 0.35in !important;
     font-size: 9pt !important;
-    line-height: 1.4 !important;
     color: #555 !important;
     font-family: var(--font-family) !important;
+    text-align: left !important;
   }
   @page { margin: 1in; }
 }
