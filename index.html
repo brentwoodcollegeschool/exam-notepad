@@ -10,7 +10,7 @@
       background: #ffffff; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     }
 
-    /* Fixed Full-Width Top Header Bar */
+    /* Fixed Top Header Bar */
     .top-bar {
       position: fixed; top: 0; left: 0; right: 0; height: 50px;
       background: #ffffff; border-bottom: 1px solid #dadce0;
@@ -29,7 +29,7 @@
     .top-bar svg { width: 16px; height: 16px; fill: #5f6368; }
     .divider { width: 1px; height: 20px; background: #dadce0; margin: 0 2px; }
 
-    /* Typing Area (Starts cleanly below the header bar) */
+    /* Typing Area */
     #editor {
       width: 100%; min-height: calc(100vh - 50px);
       margin-top: 50px; padding: 30px 40px;
@@ -38,7 +38,7 @@
     }
     ::-webkit-scrollbar { display: none; }
 
-    /* Undo Confirmation Modal */
+    /* Undo Confirmation Pop-up */
     .modal-overlay {
       position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
       background: rgba(0, 0, 0, 0.35); z-index: 2000;
@@ -62,23 +62,35 @@
     .modal-btn.confirm { background: #d93025; color: #ffffff; border-color: #d93025; }
     .modal-btn.confirm:hover { background: #c5221f; }
 
-    /* Print Settings */
+    /* Strict Print Reset (Fixes page alignment in print preview) */
     @media print {
-      html, body { height: auto; background: #ffffff; }
-      #editor {
-        margin-top: 0; padding: 0; font-size: 12pt;
-        min-height: auto; overflow: visible !important;
+      html, body {
+        margin: 0 !important;
+        padding: 0 !important;
+        height: auto !important;
+        background: #ffffff !important;
       }
-      .no-print { display: none !important; }
-      @page { margin: 1in; }
+      .top-bar, .modal-overlay, .no-print {
+        display: none !important;
+      }
+      #editor {
+        margin-top: 0 !important;
+        padding: 0 !important;
+        font-size: 12pt !important;
+        min-height: auto !important;
+        overflow: visible !important;
+      }
+      @page {
+        margin: 1in;
+      }
     }
   </style>
 </head>
 <body>
 
-  <!-- Top Navigation Bar -->
+  <!-- Top Bar -->
   <div class="top-bar no-print">
-    <button onclick="requestUndo()" title="Undo last change">
+    <button onclick="requestUndo()" title="Undo last change (Ctrl+Z)">
       <svg viewBox="0 0 24 24"><path d="M12.5 8c-2.65 0-5.05.99-6.9 2.6L2 7v9h9l-3.62-3.62c1.39-1.16 3.16-1.88 5.12-1.88 3.54 0 6.55 2.31 7.6 5.5l2.37-.78C21.08 11.03 17.15 8 12.5 8z"/></svg>
       Undo
     </button>
@@ -87,13 +99,13 @@
       Redo
     </button>
     <div class="divider"></div>
-    <button onclick="window.print()" title="Print document">
+    <button onclick="triggerPrint()" title="Print document (Ctrl+P)">
       <svg viewBox="0 0 24 24"><path d="M19 8H5c-1.66 0-3 1.34-3 3v6h4v4h12v-4h4v-6c0-1.66-1.34-3-3-3zm-4 11H9v-5h6v5zm4-7c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm-2-9H7v4h10V3z"/></svg>
       Print
     </button>
   </div>
 
-  <!-- Safety Confirmation Pop-up -->
+  <!-- Undo Pop-up -->
   <div class="modal-overlay no-print" id="undoModal">
     <div class="modal-box">
       <h3>Undo Recent Change?</h3>
@@ -105,7 +117,7 @@
     </div>
   </div>
 
-  <!-- Main Editor Area -->
+  <!-- Editor Area -->
   <div id="editor"
        contenteditable="true"
        autofocus
@@ -118,11 +130,15 @@
     const editor = document.getElementById('editor');
     const modal = document.getElementById('undoModal');
 
-    // Restore text automatically if page reloads or device reboots
+    // Auto-save memory
     editor.innerHTML = localStorage.getItem('kiosk_exam_content') || '';
     editor.addEventListener('input', () => {
       localStorage.setItem('kiosk_exam_content', editor.innerHTML);
     });
+
+    function triggerPrint() {
+      window.print();
+    }
 
     function requestUndo() {
       modal.classList.add('active');
@@ -143,6 +159,14 @@
       document.execCommand('redo', false, null);
       localStorage.setItem('kiosk_exam_content', editor.innerHTML);
     }
+
+    // Capture Ctrl + P and Ctrl + Z keyboard shortcuts explicitly
+    document.addEventListener('keydown', (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'p') {
+        e.preventDefault();
+        triggerPrint();
+      }
+    });
   </script>
 </body>
 </html>
