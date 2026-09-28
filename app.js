@@ -222,14 +222,9 @@
   // the full value into a plain element right before printing so the whole
   // document — not just what's currently on screen — ends up on the page.
   const printOutput = document.getElementById("printOutput");
-  const printStats = document.getElementById("printStats");
   const originalTitle = document.title;
   window.addEventListener("beforeprint", () => {
-    const text = editor.value;
-    printOutput.textContent = text;
-    const lines = text ? text.split("\n").length : 0;
-    const words = text.trim() ? text.trim().split(/\s+/).length : 0;
-    printStats.textContent = `Lines: ${lines}   Words: ${words}   Characters: ${text.length}`;
+    printOutput.textContent = editor.value;
     // Chrome's print header shows document.title verbatim; blank it in case
     // headers/footers are turned on in the print dialog too (date and page
     // number there are Chrome's own, and not something this page controls).
