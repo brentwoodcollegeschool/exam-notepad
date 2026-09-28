@@ -1,172 +1,163 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <title>Exam Notepad</title>
-  <style>
-    * { box-sizing: border-box; }
-    html, body {
-      margin: 0; padding: 0; width: 100%; height: 100%;
-      background: #ffffff; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    }
-
-    /* Fixed Top Header Bar */
-    .top-bar {
-      position: fixed; top: 0; left: 0; right: 0; height: 50px;
-      background: #ffffff; border-bottom: 1px solid #dadce0;
-      display: flex; align-items: center; justify-content: flex-end;
-      padding: 0 20px; gap: 8px; z-index: 1000;
-    }
-
-    .top-bar button {
-      display: flex; align-items: center; gap: 6px;
-      background: #f8f9fa; border: 1px solid #dadce0; border-radius: 6px;
-      padding: 6px 12px; font-size: 13px; font-weight: 500; color: #3c4043;
-      cursor: pointer; transition: all 0.15s ease; user-select: none;
-    }
-    .top-bar button:hover { background: #f1f3f4; color: #202124; border-color: #bdc1c6; }
-    .top-bar button:active { background: #e8eaed; }
-    .top-bar svg { width: 16px; height: 16px; fill: #5f6368; }
-    .divider { width: 1px; height: 20px; background: #dadce0; margin: 0 2px; }
-
-    /* Typing Area */
-    #editor {
-      width: 100%; min-height: calc(100vh - 50px);
-      margin-top: 50px; padding: 30px 40px;
-      font-size: 16pt; line-height: 1.6; outline: none;
-      white-space: pre-wrap; word-wrap: break-word; color: #202124;
-    }
-    ::-webkit-scrollbar { display: none; }
-
-    /* Undo Confirmation Pop-up */
-    .modal-overlay {
-      position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-      background: rgba(0, 0, 0, 0.35); z-index: 2000;
-      display: none; align-items: center; justify-content: center;
-    }
-    .modal-overlay.active { display: flex; }
-    .modal-box {
-      background: #ffffff; padding: 24px; border-radius: 12px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.2); max-width: 360px; width: 90%;
-      text-align: center;
-    }
-    .modal-box h3 { margin: 0 0 10px 0; font-size: 18px; color: #202124; }
-    .modal-box p { margin: 0 0 20px 0; font-size: 14px; color: #5f6368; line-height: 1.4; }
-    .modal-actions { display: flex; gap: 10px; justify-content: center; }
-    .modal-btn {
-      padding: 8px 18px; border-radius: 6px; font-size: 14px; font-weight: 500;
-      border: 1px solid #dadce0; cursor: pointer;
-    }
-    .modal-btn.cancel { background: #ffffff; color: #3c4043; }
-    .modal-btn.cancel:hover { background: #f1f3f4; }
-    .modal-btn.confirm { background: #d93025; color: #ffffff; border-color: #d93025; }
-    .modal-btn.confirm:hover { background: #c5221f; }
-
-    /* Strict Print Reset (Fixes page alignment in print preview) */
-    @media print {
-      html, body {
-        margin: 0 !important;
-        padding: 0 !important;
-        height: auto !important;
-        background: #ffffff !important;
-      }
-      .top-bar, .modal-overlay, .no-print {
-        display: none !important;
-      }
-      #editor {
-        margin-top: 0 !important;
-        padding: 0 !important;
-        font-size: 12pt !important;
-        min-height: auto !important;
-        overflow: visible !important;
-      }
-      @page {
-        margin: 1in;
-      }
-    }
-  </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>Exam Notepad</title>
+<meta name="description" content="A distraction-free writing, printing, text-to-speech and dictation tool for exams and classroom use on Chromebooks.">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/favicon-32.png" sizes="32x32">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<meta name="theme-color" content="#1a73e8">
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-  <!-- Top Bar -->
-  <div class="top-bar no-print">
-    <button onclick="requestUndo()" title="Undo last change (Ctrl+Z)">
-      <svg viewBox="0 0 24 24"><path d="M12.5 8c-2.65 0-5.05.99-6.9 2.6L2 7v9h9l-3.62-3.62c1.39-1.16 3.16-1.88 5.12-1.88 3.54 0 6.55 2.31 7.6 5.5l2.37-.78C21.08 11.03 17.15 8 12.5 8z"/></svg>
-      Undo
-    </button>
-    <button onclick="doRedo()" title="Redo change">
-      <svg viewBox="0 0 24 24"><path d="M18.4 10.6C16.55 8.99 14.15 8 11.5 8c-4.65 0-8.58 3.03-9.96 7.22L3.9 16c1.05-3.19 4.05-5.5 7.6-5.5 1.95 0 3.73.72 5.12 1.88L13 16h9V7l-3.6 3.6z"/></svg>
-      Redo
-    </button>
-    <div class="divider"></div>
-    <button onclick="triggerPrint()" title="Print document (Ctrl+P)">
-      <svg viewBox="0 0 24 24"><path d="M19 8H5c-1.66 0-3 1.34-3 3v6h4v4h12v-4h4v-6c0-1.66-1.34-3-3-3zm-4 11H9v-5h6v5zm4-7c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm-2-9H7v4h10V3z"/></svg>
-      Print
-    </button>
-  </div>
-
-  <!-- Undo Pop-up -->
-  <div class="modal-overlay no-print" id="undoModal">
-    <div class="modal-box">
-      <h3>Undo Recent Change?</h3>
-      <p>Are you sure you want to undo? This will revert your most recent typing.</p>
-      <div class="modal-actions">
-        <button class="modal-btn cancel" onclick="closeUndoModal()">Cancel</button>
-        <button class="modal-btn confirm" onclick="confirmUndo()">Yes, Undo</button>
-      </div>
+  <div id="recoveryBanner" class="banner hidden no-print" role="alert">
+    <span id="recoveryText">We found unsaved work from a previous session.</span>
+    <div class="banner-actions">
+      <button id="btnRestore" class="btn btn-primary">Restore it</button>
+      <button id="btnDiscardRecovery" class="btn">Discard</button>
     </div>
   </div>
 
-  <!-- Editor Area -->
-  <div id="editor"
-       contenteditable="true"
-       autofocus
-       spellcheck="false"
-       role="textbox"
-       aria-multiline="true"
-       aria-label="Exam Text Editor"></div>
+  <header class="toolbar no-print">
+    <div class="toolbar-group">
+      <button id="btnNew" class="btn" title="New document">New</button>
+      <button id="btnOpen" class="btn" title="Open a text file from disk (Ctrl+Shift+O)">Open</button>
+      <button id="btnSave" class="btn" title="Save (Ctrl+S)">Save</button>
+      <button id="btnSaveAs" class="btn" title="Save as a new file (Ctrl+Shift+S)">Save As</button>
+    </div>
+    <div class="toolbar-divider"></div>
+    <div class="toolbar-group">
+      <button id="btnPrint" class="btn" title="Print (Ctrl+P)">Print</button>
+    </div>
+    <div class="toolbar-divider"></div>
+    <div class="toolbar-group">
+      <button id="btnUndo" class="btn" title="Undo (Ctrl+Z)">Undo</button>
+      <button id="btnRedo" class="btn" title="Redo (Ctrl+Y)">Redo</button>
+      <button id="btnHeader" class="btn" title="Insert a name/date/class header (Ctrl+T)">Insert Header</button>
+      <button id="btnWordCount" class="btn" title="Insert word count at end of document (Ctrl+Shift+C)">Insert Word Count</button>
+      <button id="btnSpecialChars" class="btn" title="Insert accented and special characters">Special Characters</button>
+    </div>
+    <div class="toolbar-divider"></div>
+    <div class="toolbar-group">
+      <button id="btnFontMinus" class="btn" title="Smaller text (Ctrl -)">A&minus;</button>
+      <button id="btnFontPlus" class="btn" title="Larger text (Ctrl +)">A&plus;</button>
+      <button id="btnLineMinus" class="btn" title="Tighter line spacing">Line&minus;</button>
+      <button id="btnLinePlus" class="btn" title="Wider line spacing">Line&plus;</button>
+      <button id="btnTheme" class="btn" title="Toggle light/dark theme">Theme</button>
+      <button id="btnFullscreen" class="btn" title="Toggle fullscreen">Fullscreen</button>
+    </div>
+    <div class="toolbar-divider"></div>
+    <div class="toolbar-group">
+      <button id="btnReadAloud" class="btn" title="Read the document aloud (or the selected text)">▶ Read Aloud</button>
+      <button id="btnStopReading" class="btn" title="Stop reading">Stop</button>
+      <button id="btnDictate" class="btn" title="Speak to type (dictation)">🎤 Dictate</button>
+    </div>
+    <div class="toolbar-group toolbar-right">
+      <button id="btnHelp" class="btn" title="Help and keyboard shortcuts">Help</button>
+    </div>
+  </header>
 
-  <script>
-    const editor = document.getElementById('editor');
-    const modal = document.getElementById('undoModal');
+  <main>
+    <textarea
+      id="editor"
+      spellcheck="true"
+      autofocus
+      autocapitalize="sentences"
+      aria-label="Exam text editor"
+      placeholder="Start writing…"
+    ></textarea>
+  </main>
 
-    // Auto-save memory
-    editor.innerHTML = localStorage.getItem('kiosk_exam_content') || '';
-    editor.addEventListener('input', () => {
-      localStorage.setItem('kiosk_exam_content', editor.innerHTML);
-    });
+  <!--
+    Chrome only prints the currently-visible/scrolled portion of a <textarea>,
+    not its full content. This hidden element is filled with the full text
+    right before printing and is the only thing shown on the printed page.
+  -->
+  <div id="printOutput" class="print-only" aria-hidden="true"></div>
 
-    function triggerPrint() {
-      window.print();
-    }
+  <footer class="statusbar no-print">
+    <span id="wordCount">0 words</span>
+    <span id="charCount">0 characters</span>
+    <span id="dictateStatus" class="status-flex"></span>
+    <span id="saveStatus">Not saved yet</span>
+  </footer>
 
-    function requestUndo() {
-      modal.classList.add('active');
-    }
+  <div id="modalOverlay" class="modal-overlay hidden no-print">
 
-    function closeUndoModal() {
-      modal.classList.remove('active');
-      editor.focus();
-    }
+    <div id="modalHelp" class="modal hidden" role="dialog" aria-labelledby="helpTitle">
+      <div class="modal-head">
+        <h2 id="helpTitle">Help &amp; Shortcuts</h2>
+        <button class="btn modal-close" data-close>Close</button>
+      </div>
+      <div class="modal-body">
+        <h3>Writing</h3>
+        <ul>
+          <li><b>New</b> — start a blank document</li>
+          <li><b>Insert Header</b> (Ctrl+T) — adds a Name / Date / Class block at the top</li>
+          <li><b>Insert Word Count</b> (Ctrl+Shift+C) — adds the current word count at the end</li>
+          <li><b>Special Characters</b> — click to insert accented letters and symbols</li>
+          <li>Spelling is checked by your browser's built-in spellchecker (red underline)</li>
+        </ul>
+        <h3>Saving, Opening &amp; Printing</h3>
+        <ul>
+          <li><b>Save</b> (Ctrl+S) — saves to the same file, or asks where to save the first time</li>
+          <li><b>Save As</b> (Ctrl+Shift+S) — always asks where to save a new copy</li>
+          <li><b>Open</b> (Ctrl+Shift+O) — opens a .txt file from disk or USB drive</li>
+          <li><b>Print</b> (Ctrl+P) — prints cleanly, without the toolbar</li>
+          <li>Your work is auto-saved in the browser as you type, and offered back to you if the page is closed or crashes before you save</li>
+        </ul>
+        <h3>Display</h3>
+        <ul>
+          <li><b>A&minus; / A&plus;</b> (Ctrl &minus; / Ctrl +) — change text size, <b>Ctrl 0</b> resets it</li>
+          <li><b>Line&minus; / Line&plus;</b> — change line spacing</li>
+          <li><b>Theme</b> — switch between light and dark</li>
+          <li><b>Fullscreen</b> — hide the browser chrome for a distraction-free view</li>
+        </ul>
+        <h3>Speech</h3>
+        <ul>
+          <li><b>Read Aloud</b> — reads the selected text, or the whole document if nothing is selected. Click again to pause/resume.</li>
+          <li><b>Dictate</b> — turns on the microphone and types what you say at the cursor. Click again to stop. Requires microphone access and an internet connection.</li>
+        </ul>
+      </div>
+    </div>
 
-    function confirmUndo() {
-      closeUndoModal();
-      document.execCommand('undo', false, null);
-      localStorage.setItem('kiosk_exam_content', editor.innerHTML);
-    }
+    <div id="modalChars" class="modal hidden" role="dialog" aria-labelledby="charsTitle">
+      <div class="modal-head">
+        <h2 id="charsTitle">Special Characters</h2>
+        <button class="btn modal-close" data-close>Close</button>
+      </div>
+      <div class="modal-body">
+        <p>Click a character to insert it at your cursor.</p>
+        <div id="charGrid" class="char-grid"></div>
+      </div>
+    </div>
 
-    function doRedo() {
-      document.execCommand('redo', false, null);
-      localStorage.setItem('kiosk_exam_content', editor.innerHTML);
-    }
+    <div id="modalSpeech" class="modal hidden" role="dialog" aria-labelledby="speechTitle">
+      <div class="modal-head">
+        <h2 id="speechTitle">Read Aloud Settings</h2>
+        <button class="btn modal-close" data-close>Close</button>
+      </div>
+      <div class="modal-body">
+        <label class="field">
+          <span>Voice</span>
+          <select id="voiceSelect"></select>
+        </label>
+        <label class="field">
+          <span>Speed: <span id="rateValue">1.0×</span></span>
+          <input type="range" id="rateSlider" min="0.5" max="2" step="0.1" value="1">
+        </label>
+      </div>
+    </div>
 
-    // Capture Ctrl + P and Ctrl + Z keyboard shortcuts explicitly
-    document.addEventListener('keydown', (e) => {
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'p') {
-        e.preventDefault();
-        triggerPrint();
-      }
-    });
-  </script>
+  </div>
+
+  <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
+
+  <input type="file" id="fileInput" accept=".txt,text/plain" class="hidden">
+
+  <script src="app.js"></script>
 </body>
 </html>
