@@ -1,4 +1,4 @@
-const CACHE_NAME = "exam-notepad-v1";
+const CACHE_NAME = "exam-notepad-v2";
 const ASSETS = [
   "./",
   "./index.html",
@@ -26,23 +26,23 @@ self.addEventListener("activate", (event) => {
   );
 });
 
-// Cache-first for the app shell, with a background refresh so a redeploy
-// is picked up on the next load without ever leaving the page unusable offline.
+// Network-first: always use the latest deployed version when online (so a
+// push here shows up on next load, not "whenever the cache happens to
+// revalidate"), and only fall back to the cached app shell if the network
+// is actually unavailable — that's the one scenario offline support exists
+// for in the first place.
 self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET") return;
 
   event.respondWith(
-    caches.match(event.request).then((cached) => {
-      const network = fetch(event.request)
-        .then((response) => {
-          if (response && response.status === 200) {
-            const copy = response.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
-          }
-          return response;
-        })
-        .catch(() => cached);
-      return cached || network;
-    })
+    fetch(event.request)
+      .then((response) => {
+        if (response && response.status === 200) {
+          const copy = response.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
+        }
+        return response;
+      })
+      .catch(() => caches.match(event.request))
   );
 });

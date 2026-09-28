@@ -13,6 +13,7 @@
   --font-size: 18px;
   --line-height: 1.6;
   --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --editor-font-family: ui-monospace, "Roboto Mono", Menlo, Consolas, "Courier New", monospace;
 }
 
 body.theme-dark {
@@ -128,8 +129,8 @@ main {
   color: var(--text);
   font-size: var(--font-size);
   line-height: var(--line-height);
-  font-family: var(--font-family);
-  font-variant-numeric: lining-nums;
+  font-family: var(--editor-font-family);
+  font-variant-numeric: lining-nums tabular-nums;
   white-space: pre-wrap;
   word-wrap: break-word;
 }
@@ -254,7 +255,7 @@ body.theme-dark .banner {
 ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 6px; }
 
 /* Print */
-.print-only { display: none; }
+.print-only, #printFooter { display: none; }
 
 @media print {
   html, body {
@@ -268,14 +269,26 @@ body.theme-dark .banner {
   .print-only {
     display: block !important;
     padding-top: 0.25in !important;
+    padding-bottom: 0.4in !important;
     font-size: 12pt !important;
     line-height: 1.5 !important;
     color: #000000 !important;
     background: #ffffff !important;
     white-space: pre-wrap !important;
     word-wrap: break-word !important;
+    font-family: var(--editor-font-family) !important;
+    font-variant-numeric: lining-nums tabular-nums !important;
+  }
+  #printFooter {
+    display: block !important;
+    position: fixed !important;
+    bottom: 0.15in !important;
+    left: 0 !important;
+    right: 0 !important;
+    font-size: 9pt !important;
+    color: #444 !important;
     font-family: var(--font-family) !important;
-    font-variant-numeric: lining-nums !important;
+    text-align: center !important;
   }
   @page { margin: 1in; }
 }

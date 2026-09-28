@@ -221,12 +221,20 @@
   // the full value into a plain element right before printing so the whole
   // document — not just what's currently on screen — ends up on the page.
   const printOutput = document.getElementById("printOutput");
+  const printFooter = document.getElementById("printFooter");
   const originalTitle = document.title;
   window.addEventListener("beforeprint", () => {
     printOutput.textContent = editor.value;
-    // Chrome's print header shows document.title verbatim; blank it so
-    // "Exam Notepad" doesn't appear there (the date/page-number fields
-    // next to it are controlled entirely by the print dialog, not the page).
+    // A fixed-position element repeats on every printed page in Chrome, so
+    // this gives a consistent date/time stamp without relying on Chrome's
+    // own print header/footer (which can't show only date + page number —
+    // it's all four fields, including the page URL, or none of them).
+    printFooter.textContent = new Date().toLocaleString([], {
+      dateStyle: "medium",
+      timeStyle: "short",
+    });
+    // Chrome's print header shows document.title verbatim; blank it in case
+    // headers/footers are turned on in the print dialog too.
     document.title = " ";
   });
   window.addEventListener("afterprint", () => {
