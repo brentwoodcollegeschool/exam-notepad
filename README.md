@@ -14,15 +14,13 @@ working once Google removed the Chrome Apps platform.
 - Open and save `.txt` files straight to disk or a USB drive
 - Clean printing (toolbar and UI are hidden on the printed page)
 - Insert accented letters and special characters
-- Optional line-number gutter (never appears when printed)
 - Live line, word, and character counts in the status bar
 - Auto-saves your draft locally as you type, and offers to restore it if the page is closed or
   crashes before you save
 - **Read Aloud** — text-to-speech for the whole document or just the selected text, with voice
   and speed controls
-- **Dictate** — speech-to-text typing at the cursor
-- Works offline once loaded (except Dictate, which needs an internet connection)
-- Installable as a Progressive Web App and usable as a ChromeOS kiosk app
+- **Dictate** — speech-to-text typing at the cursor (needs an internet connection)
+- Usable as a ChromeOS kiosk app (see SETUP.md)
 
 ## Local development
 
@@ -34,8 +32,8 @@ python3 -m http.server 8000
 ```
 
 Then open `http://localhost:8000` in Chrome. (Opening `index.html` directly with `file://` also
-mostly works, but the service worker and File System Access API behave more reliably over
-`http://localhost` or `https://`.)
+mostly works, but the File System Access API behaves more reliably over `http://localhost` or
+`https://`.)
 
 ## Deploying
 

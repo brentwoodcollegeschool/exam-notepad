@@ -41,7 +41,6 @@
     </div>
     <div class="toolbar-divider"></div>
     <div class="toolbar-group">
-      <button id="btnLineNumbers" class="btn" title="Toggle line numbers">Line Numbers</button>
       <button id="btnTheme" class="btn" title="Toggle light/dark theme">Theme</button>
     </div>
     <div class="toolbar-divider"></div>
@@ -67,22 +66,15 @@
   </header>
 
   <main>
-    <div id="editorWrap" class="editor-wrap">
-      <div id="lineNumbers" class="line-numbers no-print hidden" aria-hidden="true"></div>
-      <textarea
-        id="editor"
-        spellcheck="true"
-        autofocus
-        autocapitalize="sentences"
-        aria-label="Exam text editor"
-        placeholder="Start writing…"
-      ></textarea>
-    </div>
+    <textarea
+      id="editor"
+      spellcheck="true"
+      autofocus
+      autocapitalize="sentences"
+      aria-label="Exam text editor"
+      placeholder="Start writing…"
+    ></textarea>
   </main>
-
-  <!-- Hidden element used only to measure how each line wraps, so the line
-       number gutter lines up with wrapped rows and not just raw newlines. -->
-  <div id="lineMirror" class="line-mirror" aria-hidden="true"></div>
 
   <!--
     Chrome only prints the currently-visible/scrolled portion of a <textarea>,
@@ -112,7 +104,6 @@
         <ul>
           <li><b>New</b> — start a blank document</li>
           <li><b>Special Characters</b> — click to insert accented letters and symbols</li>
-          <li><b>Line Numbers</b> — toggle a line-number gutter on or off (never appears when printed)</li>
           <li>Spelling is checked by your browser's built-in spellchecker (red underline)</li>
           <li>Line, word, and character counts are always shown at the bottom of the screen</li>
         </ul>

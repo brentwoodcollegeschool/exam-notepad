@@ -2,8 +2,6 @@
   "use strict";
 
   const editor = document.getElementById("editor");
-  const lineNumbersEl = document.getElementById("lineNumbers");
-  const lineMirror = document.getElementById("lineMirror");
   const lineCountEl = document.getElementById("lineCount");
   const wordCountEl = document.getElementById("wordCount");
   const charCountEl = document.getElementById("charCount");
@@ -27,14 +25,12 @@
   const DRAFT_KEY = "examNotepad.draft.v1";
   const THEME_KEY = "examNotepad.theme";
   const FONT_KEY = "examNotepad.fontSize";
-  const LINE_NUMBERS_KEY = "examNotepad.lineNumbers";
 
   const FONT_MIN = 12, FONT_MAX = 40, FONT_STEP = 2, FONT_DEFAULT = 18;
 
   let fileHandle = null;
   let dirty = false;
   let autosaveTimer = null;
-  let lineNumberTimer = null;
 
   // ---------- Toast ----------
   let toastTimer = null;
@@ -53,7 +49,6 @@
     lineCountEl.textContent = `${lines} line${lines === 1 ? "" : "s"}`;
     wordCountEl.textContent = `${words} word${words === 1 ? "" : "s"}`;
     charCountEl.textContent = `${text.length} character${text.length === 1 ? "" : "s"}`;
-    scheduleLineNumberUpdate();
   }
 
   function markDirty() {
@@ -276,7 +271,6 @@
 
   function applyEditorStyle() {
     document.documentElement.style.setProperty("--font-size", fontSize + "px");
-    scheduleLineNumberUpdate();
   }
 
   function changeFontSize(delta) {
@@ -292,67 +286,6 @@
   }
 
   applyEditorStyle();
-
-  // ---------- Line numbers ----------
-  let lineNumbersVisible = localStorage.getItem(LINE_NUMBERS_KEY) !== "false";
-
-  function computeLineHeightPx() {
-    const lh = parseFloat(getComputedStyle(editor).lineHeight);
-    return Number.isFinite(lh) && lh > 0 ? lh : parseFloat(getComputedStyle(editor).fontSize) * 1.2;
-  }
-
-  function syncMirrorBox() {
-    const cs = getComputedStyle(editor);
-    lineMirror.style.width = editor.clientWidth + "px";
-    lineMirror.style.boxSizing = "border-box";
-    lineMirror.style.paddingLeft = cs.paddingLeft;
-    lineMirror.style.paddingRight = cs.paddingRight;
-    lineMirror.style.fontFamily = cs.fontFamily;
-    lineMirror.style.fontSize = cs.fontSize;
-    lineMirror.style.letterSpacing = cs.letterSpacing;
-  }
-
-  function updateLineNumbers() {
-    if (!lineNumbersVisible) return;
-    syncMirrorBox();
-    const lineHeightPx = computeLineHeightPx();
-    const lines = editor.value.split("\n");
-    const rowsOut = [];
-    for (let i = 0; i < lines.length; i++) {
-      lineMirror.textContent = lines[i].length ? lines[i] : " ";
-      const rows = Math.max(1, Math.round(lineMirror.scrollHeight / lineHeightPx));
-      rowsOut.push(String(i + 1));
-      for (let r = 1; r < rows; r++) rowsOut.push("");
-    }
-    lineNumbersEl.textContent = rowsOut.join("\n");
-    lineNumbersEl.scrollTop = editor.scrollTop;
-  }
-
-  function scheduleLineNumberUpdate() {
-    if (!lineNumbersVisible) return;
-    clearTimeout(lineNumberTimer);
-    lineNumberTimer = setTimeout(updateLineNumbers, 150);
-  }
-
-  function setLineNumbersVisible(visible) {
-    lineNumbersVisible = visible;
-    localStorage.setItem(LINE_NUMBERS_KEY, String(visible));
-    lineNumbersEl.classList.toggle("hidden", !visible);
-    document.getElementById("btnLineNumbers").classList.toggle("active", visible);
-    if (visible) updateLineNumbers();
-  }
-
-  document.getElementById("btnLineNumbers").addEventListener("click", () => {
-    setLineNumbersVisible(!lineNumbersVisible);
-  });
-
-  editor.addEventListener("scroll", () => {
-    if (lineNumbersVisible) lineNumbersEl.scrollTop = editor.scrollTop;
-  });
-
-  window.addEventListener("resize", () => scheduleLineNumberUpdate());
-
-  setLineNumbersVisible(lineNumbersVisible);
 
   // ---------- Theme ----------
   function applyTheme(theme) {
@@ -588,10 +521,20 @@
     else if (k === "0") { e.preventDefault(); resetFontSize(); }
   });
 
-  // ---------- Service worker (offline app shell) ----------
+  // ---------- Service worker ----------
+  // Not registering one for now — while this app is still changing fast, a
+  // previously installed service worker can keep serving an old, mismatched
+  // copy of the page after a deploy. Actively clean up anything left over
+  // from earlier testing so nobody gets stuck on a stale version.
   if ("serviceWorker" in navigator) {
-    window.addEventListener("load", () => {
-      navigator.serviceWorker.register("sw.js").catch(() => {});
+    navigator.serviceWorker.getRegistrations().then((regs) => {
+      if (!regs.length) return;
+      Promise.all(regs.map((r) => r.unregister())).then(() => {
+        if ("caches" in window) {
+          caches.keys().then((keys) => Promise.all(keys.map((k) => caches.delete(k))));
+        }
+        location.reload();
+      });
     });
   }
 

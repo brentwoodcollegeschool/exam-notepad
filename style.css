@@ -117,41 +117,6 @@ main {
   display: flex;
 }
 
-.editor-wrap {
-  flex: 1 1 auto;
-  min-height: 0;
-  display: flex;
-  background: var(--editor-bg);
-}
-
-.line-numbers {
-  flex: 0 0 auto;
-  box-sizing: border-box;
-  width: 3.5em;
-  padding: 30px 10px 30px 0;
-  text-align: right;
-  background: var(--editor-bg);
-  color: var(--muted);
-  border-right: 1px solid var(--border);
-  font-family: var(--editor-font-family);
-  font-size: var(--font-size);
-  line-height: var(--line-height);
-  white-space: pre;
-  overflow: hidden;
-  user-select: none;
-}
-
-.line-mirror {
-  position: absolute;
-  visibility: hidden;
-  height: 0;
-  top: 0;
-  left: -9999px;
-  overflow: hidden;
-  white-space: pre-wrap;
-  word-wrap: break-word;
-}
-
 #editor {
   flex: 1 1 auto;
   width: 100%;
