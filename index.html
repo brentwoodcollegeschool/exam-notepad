@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Exam Notepad</title>
+  <style>
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0; padding: 0; width: 100%; height: 100%;
+      background: #ffffff; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    /* Fixed Full-Width Top Header Bar */
+    .top-bar {
+      position: fixed; top: 0; left: 0; right: 0; height: 50px;
+      background: #ffffff; border-bottom: 1px solid #dadce0;
+      display: flex; align-items: center; justify-content: flex-end;
+      padding: 0 20px; gap: 8px; z-index: 1000;
+    }
+
+    .top-bar button {
+      display: flex; align-items: center; gap: 6px;
+      background: #f8f9fa; border: 1px solid #dadce0; border-radius: 6px;
+      padding: 6px 12px; font-size: 13px; font-weight: 500; color: #3c4043;
+      cursor: pointer; transition: all 0.15s ease; user-select: none;
+    }
+    .top-bar button:hover { background: #f1f3f4; color: #202124; border-color: #bdc1c6; }
+    .top-bar button:active { background: #e8eaed; }
+    .top-bar svg { width: 16px; height: 16px; fill: #5f6368; }
+    .divider { width: 1px; height: 20px; background: #dadce0; margin: 0 2px; }
+
+    /* Typing Area (Starts cleanly below the header bar) */
+    #editor {
+      width: 100%; min-height: calc(100vh - 50px);
+      margin-top: 50px; padding: 30px 40px;
+      font-size: 16pt; line-height: 1.6; outline: none;
+      white-space: pre-wrap; word-wrap: break-word; color: #202124;
+    }
+    ::-webkit-scrollbar { display: none; }
+
+    /* Undo Confirmation Modal */
+    .modal-overlay {
+      position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+      background: rgba(0, 0, 0, 0.35); z-index: 2000;
+      display: none; align-items: center; justify-content: center;
+    }
+    .modal-overlay.active { display: flex; }
+    .modal-box {
+      background: #ffffff; padding: 24px; border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.2); max-width: 360px; width: 90%;
+      text-align: center;
+    }
+    .modal-box h3 { margin: 0 0 10px 0; font-size: 18px; color: #202124; }
+    .modal-box p { margin: 0 0 20px 0; font-size: 14px; color: #5f6368; line-height: 1.4; }
+    .modal-actions { display: flex; gap: 10px; justify-content: center; }
+    .modal-btn {
+      padding: 8px 18px; border-radius: 6px; font-size: 14px; font-weight: 500;
+      border: 1px solid #dadce0; cursor: pointer;
+    }
+    .modal-btn.cancel { background: #ffffff; color: #3c4043; }
+    .modal-btn.cancel:hover { background: #f1f3f4; }
+    .modal-btn.confirm { background: #d93025; color: #ffffff; border-color: #d93025; }
+    .modal-btn.confirm:hover { background: #c5221f; }
+
+    /* Print Settings */
+    @media print {
+      html, body { height: auto; background: #ffffff; }
+      #editor {
+        margin-top: 0; padding: 0; font-size: 12pt;
+        min-height: auto; overflow: visible !important;
+      }
+      .no-print { display: none !important; }
+      @page { margin: 1in; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Navigation Bar -->
+  <div class="top-bar no-print">
+    <button onclick="requestUndo()" title="Undo last change">
+      <svg viewBox="0 0 24 24"><path d="M12.5 8c-2.65 0-5.05.99-6.9 2.6L2 7v9h9l-3.62-3.62c1.39-1.16 3.16-1.88 5.12-1.88 3.54 0 6.55 2.31 7.6 5.5l2.37-.78C21.08 11.03 17.15 8 12.5 8z"/></svg>
+      Undo
+    </button>
+    <button onclick="doRedo()" title="Redo change">
+      <svg viewBox="0 0 24 24"><path d="M18.4 10.6C16.55 8.99 14.15 8 11.5 8c-4.65 0-8.58 3.03-9.96 7.22L3.9 16c1.05-3.19 4.05-5.5 7.6-5.5 1.95 0 3.73.72 5.12 1.88L13 16h9V7l-3.6 3.6z"/></svg>
+      Redo
+    </button>
+    <div class="divider"></div>
+    <button onclick="window.print()" title="Print document">
+      <svg viewBox="0 0 24 24"><path d="M19 8H5c-1.66 0-3 1.34-3 3v6h4v4h12v-4h4v-6c0-1.66-1.34-3-3-3zm-4 11H9v-5h6v5zm4-7c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm-2-9H7v4h10V3z"/></svg>
+      Print
+    </button>
+  </div>
+
+  <!-- Safety Confirmation Pop-up -->
+  <div class="modal-overlay no-print" id="undoModal">
+    <div class="modal-box">
+      <h3>Undo Recent Change?</h3>
+      <p>Are you sure you want to undo? This will revert your most recent typing.</p>
+      <div class="modal-actions">
+        <button class="modal-btn cancel" onclick="closeUndoModal()">Cancel</button>
+        <button class="modal-btn confirm" onclick="confirmUndo()">Yes, Undo</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Editor Area -->
+  <div id="editor"
+       contenteditable="true"
+       autofocus
+       spellcheck="false"
+       role="textbox"
+       aria-multiline="true"
+       aria-label="Exam Text Editor"></div>
+
+  <script>
+    const editor = document.getElementById('editor');
+    const modal = document.getElementById('undoModal');
+
+    // Restore text automatically if page reloads or device reboots
+    editor.innerHTML = localStorage.getItem('kiosk_exam_content') || '';
+    editor.addEventListener('input', () => {
+      localStorage.setItem('kiosk_exam_content', editor.innerHTML);
+    });
+
+    function requestUndo() {
+      modal.classList.add('active');
+    }
+
+    function closeUndoModal() {
+      modal.classList.remove('active');
+      editor.focus();
+    }
+
+    function confirmUndo() {
+      closeUndoModal();
+      document.execCommand('undo', false, null);
+      localStorage.setItem('kiosk_exam_content', editor.innerHTML);
+    }
+
+    function doRedo() {
+      document.execCommand('redo', false, null);
+      localStorage.setItem('kiosk_exam_content', editor.innerHTML);
+    }
+  </script>
+</body>
+</html>
