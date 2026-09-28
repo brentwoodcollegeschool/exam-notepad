@@ -129,6 +129,7 @@ main {
   font-size: var(--font-size);
   line-height: var(--line-height);
   font-family: Georgia, "Times New Roman", serif;
+  font-variant-numeric: lining-nums;
   white-space: pre-wrap;
   word-wrap: break-word;
 }
@@ -272,6 +273,7 @@ body.theme-dark .banner {
     white-space: pre-wrap !important;
     word-wrap: break-word !important;
     font-family: Georgia, "Times New Roman", serif !important;
+    font-variant-numeric: lining-nums !important;
   }
   @page { margin: 1in; }
 }
