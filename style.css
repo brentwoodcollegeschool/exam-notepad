@@ -128,7 +128,7 @@ main {
   color: var(--text);
   font-size: var(--font-size);
   line-height: var(--line-height);
-  font-family: Georgia, "Times New Roman", serif;
+  font-family: var(--font-family);
   font-variant-numeric: lining-nums;
   white-space: pre-wrap;
   word-wrap: break-word;
@@ -258,6 +258,7 @@ body.theme-dark .banner {
 
 @media print {
   html, body {
+    display: block !important;
     height: auto !important;
     overflow: visible !important;
     background: #ffffff !important;
@@ -266,13 +267,14 @@ body.theme-dark .banner {
   .no-print, main { display: none !important; }
   .print-only {
     display: block !important;
+    padding-top: 0.25in !important;
     font-size: 12pt !important;
     line-height: 1.5 !important;
     color: #000000 !important;
     background: #ffffff !important;
     white-space: pre-wrap !important;
     word-wrap: break-word !important;
-    font-family: Georgia, "Times New Roman", serif !important;
+    font-family: var(--font-family) !important;
     font-variant-numeric: lining-nums !important;
   }
   @page { margin: 1in; }

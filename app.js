@@ -221,8 +221,16 @@
   // the full value into a plain element right before printing so the whole
   // document — not just what's currently on screen — ends up on the page.
   const printOutput = document.getElementById("printOutput");
+  const originalTitle = document.title;
   window.addEventListener("beforeprint", () => {
     printOutput.textContent = editor.value;
+    // Chrome's print header shows document.title verbatim; blank it so
+    // "Exam Notepad" doesn't appear there (the date/page-number fields
+    // next to it are controlled entirely by the print dialog, not the page).
+    document.title = " ";
+  });
+  window.addEventListener("afterprint", () => {
+    document.title = originalTitle;
   });
 
   // ---------- Undo / redo ----------
