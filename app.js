@@ -60,6 +60,9 @@
     const now = new Date();
     const time = now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
     saveStatusEl.textContent = `Saved at ${time}`;
+    // Once the work is safely on disk, drop the local recovery draft so it
+    // can't be offered to the next person who uses this device.
+    try { localStorage.removeItem(DRAFT_KEY); } catch (e) {}
   }
 
   // ---------- Autosave / recovery ----------
@@ -80,7 +83,9 @@
     try { draft = JSON.parse(raw); } catch (e) { return; }
     if (!draft || !draft.text || !draft.text.trim()) return;
     const when = new Date(draft.ts).toLocaleString([], { hour: "2-digit", minute: "2-digit" });
-    recoveryText.textContent = `We found unsaved work from ${when}. Restore it?`;
+    const snippet = draft.text.trim().slice(0, 60).replace(/\s+/g, " ");
+    const preview = snippet.length < draft.text.trim().length ? snippet + "…" : snippet;
+    recoveryText.textContent = `Unsaved work from ${when}: "${preview}" — is this yours?`;
     recoveryBanner.classList.remove("hidden");
     recoveryBanner.dataset.text = draft.text;
   }
@@ -408,9 +413,16 @@
     return editor.value;
   }
 
+  const readIconPlay = btnReadAloud.querySelector(".icon-play");
+  const readIconPause = btnReadAloud.querySelector(".icon-pause");
+  const readLabel = btnReadAloud.querySelector(".btn-label");
+
   function updateReadBtn(state) {
-    btnReadAloud.classList.toggle("active", state === "playing");
-    btnReadAloud.textContent = state === "playing" ? "⏸ Pause" : "▶ Read Aloud";
+    const playing = state === "playing";
+    btnReadAloud.classList.toggle("active", playing);
+    readIconPlay.classList.toggle("hidden", playing);
+    readIconPause.classList.toggle("hidden", !playing);
+    readLabel.textContent = playing ? "Pause" : "Read Aloud";
   }
 
   function readAloud() {
@@ -452,9 +464,15 @@
   let dictating = false;
   let shouldRestart = false;
 
+  const dictateIconMic = btnDictate.querySelector(".icon-mic");
+  const dictateIconStop = btnDictate.querySelector(".icon-stop");
+  const dictateLabel = btnDictate.querySelector(".btn-label");
+
   function updateDictateBtn() {
-    btnDictate.classList.toggle("active", dictating);
-    btnDictate.textContent = dictating ? "⏹ Stop Dictation" : "🎤 Dictate";
+    btnDictate.classList.toggle("recording", dictating);
+    dictateIconMic.classList.toggle("hidden", dictating);
+    dictateIconStop.classList.toggle("hidden", !dictating);
+    dictateLabel.textContent = dictating ? "Stop Dictation" : "Dictate";
   }
 
   if (SpeechRec) {

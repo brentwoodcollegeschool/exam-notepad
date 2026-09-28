@@ -9,6 +9,7 @@
 <link rel="icon" href="icons/favicon-32.png" sizes="32x32">
 <link rel="apple-touch-icon" href="icons/icon-192.png">
 <meta name="theme-color" content="#1a73e8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; base-uri 'none'; form-action 'none'; frame-ancestors 'none';">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -51,9 +52,20 @@
     </div>
     <div class="toolbar-divider"></div>
     <div class="toolbar-group">
-      <button id="btnReadAloud" class="btn" title="Read the document aloud (or the selected text)">▶ Read Aloud</button>
-      <button id="btnStopReading" class="btn" title="Stop reading">Stop</button>
-      <button id="btnDictate" class="btn" title="Speak to type (dictation)">🎤 Dictate</button>
+      <button id="btnReadAloud" class="btn" title="Read the document aloud (or the selected text)">
+        <svg class="icon icon-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>
+        <svg class="icon icon-pause hidden" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 5h4v14H6zm8 0h4v14h-4z"/></svg>
+        <span class="btn-label">Read Aloud</span>
+      </button>
+      <button id="btnStopReading" class="btn" title="Stop reading">
+        <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6h12v12H6z"/></svg>
+        <span class="btn-label">Stop</span>
+      </button>
+      <button id="btnDictate" class="btn" title="Speak to type (dictation)">
+        <svg class="icon icon-mic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 14a3 3 0 0 0 3-3V6a3 3 0 0 0-6 0v5a3 3 0 0 0 3 3Zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.92V21h2v-3.08A7 7 0 0 0 19 11Z"/></svg>
+        <svg class="icon icon-stop hidden" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6h12v12H6z"/></svg>
+        <span class="btn-label">Dictate</span>
+      </button>
     </div>
     <div class="toolbar-group toolbar-right">
       <button id="btnHelp" class="btn" title="Help and keyboard shortcuts">Help</button>

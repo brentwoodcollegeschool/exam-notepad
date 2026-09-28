@@ -93,7 +93,15 @@ body {
 .btn:hover { background: var(--panel-hover); }
 .btn:active { background: var(--panel-active); }
 .btn.active { background: var(--accent); color: var(--accent-contrast); border-color: var(--accent); }
+.btn.recording { background: var(--danger); color: #fff; border-color: var(--danger); animation: pulse 1.4s ease-in-out infinite; }
 .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.btn .icon { width: 16px; height: 16px; flex-shrink: 0; fill: currentColor; }
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
 
 .btn-primary {
   background: var(--accent);

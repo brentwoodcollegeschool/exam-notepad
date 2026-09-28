@@ -55,6 +55,37 @@ Kiosk sessions also restrict printing by default. In the same OU:
 - Set up your printers for that OU under `Devices → Chrome → Printers` (or via Print Management)
   so students can select one from the print dialog.
 
+### Security checklist (do this — not optional)
+
+The app itself can't stop a student from getting out of it; that boundary has to be enforced by
+ChromeOS device policy. Set these on the same OU:
+
+- **Ephemeral mode** (`Devices → Chrome → Settings → Device → Sign-in settings` →
+  **Ephemeral mode**, or the device-level "Ephemeral users" setting): turn this **on**. It wipes
+  all local browser storage — including this app's auto-save drafts — at the end of every kiosk
+  session. Without it, one student's unsaved answer could theoretically still be sitting in the
+  browser's local storage when the next student sits down at the same Chromebook. The app now
+  also clears its own draft the moment work is saved to a file, and shows a short preview of any
+  recovered draft so a mismatch is obvious — but ephemeral mode is the real fix, and the only one
+  that also covers a hard crash/power-loss mid-exam.
+- **Developer tools**: `Devices → Chrome → Settings → Users & browsers → Developer tools` → set
+  to **Never allow**. Otherwise a student can open DevTools and edit the page, view or exfiltrate
+  the console, etc.
+- **Extensions**: for this OU, block all extensions except ones you explicitly need (most exam
+  setups need none).
+- **Incognito / other browsing**: in Kiosk mode (Option A below) there is no omnibox or tab strip
+  at all, so this is moot; in the Managed Guest Session approach (Option B), explicitly disable
+  Incognito mode and set the URL allowlist as described there.
+- **Downloads**: if you don't want students downloading/saving copies of files outside the exam
+  flow, restrict the download directory or disable downloads for the OU — Save/Save As in this
+  app uses Chrome's native file picker, which respects that policy.
+
+None of this is exotic; it's the same checklist any school uses for locked-down testing
+Chromebooks generally. The app's own code has no external dependencies, makes no network calls of
+its own (only the browser's built-in dictation feature does, to Google's speech service), and
+ships with a strict Content-Security-Policy, so its own attack surface is minimal — the policies
+above are what stop a student from getting *around* it rather than through it.
+
 ### Updating the app
 
 Because this is a *Web Kiosk* (not an installed Chrome App package), Chrome always loads the
