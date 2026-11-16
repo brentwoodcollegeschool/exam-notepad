@@ -9,6 +9,8 @@
   --panel-active: #e8eaed;
   --accent: #1a73e8;
   --accent-contrast: #ffffff;
+  --accent-hover: #1765cc;
+  --accent-active: #185abc;
   --danger: #d93025;
   --font-size: 18px;
   --line-height: 1.6;
@@ -25,6 +27,11 @@ body.theme-dark {
   --panel: #2a2b2e;
   --panel-hover: #35363a;
   --panel-active: #3c4043;
+  /* Softer, lighter accent on dark surfaces (white-on-bright-blue glares) */
+  --accent: #8ab4f8;
+  --accent-contrast: #202124;
+  --accent-hover: #a5c8fa;
+  --accent-active: #7aa7ee;
 }
 
 * { box-sizing: border-box; }
@@ -124,11 +131,22 @@ body {
 .menu-item:hover, .menu-item:focus-visible { background: var(--panel-hover); outline: none; }
 .menu-key { color: var(--muted); font-size: 12px; }
 
-.btn-primary {
+/* Primary button. Declared with .btn.btn-primary so hover/active beat the
+   generic .btn:hover rule (that rule was turning it white-on-white). */
+.btn.btn-primary {
   background: var(--accent);
   color: var(--accent-contrast);
   border-color: var(--accent);
+  transition: background-color .12s ease-out, border-color .12s ease-out, transform .08s ease-out, box-shadow .12s ease-out;
 }
+.btn.btn-primary:hover { background: var(--accent-hover); border-color: var(--accent-hover); box-shadow: 0 2px 8px rgba(26,115,232,.35); }
+.btn.btn-primary:active { background: var(--accent-active); border-color: var(--accent-active); transform: translateY(1px); box-shadow: none; }
+
+/* Visible keyboard focus for every control (mouse clicks stay clean) */
+.btn:focus-visible, .menu-item:focus-visible, .modal-close:focus-visible {
+  outline: 2px solid var(--accent); outline-offset: 2px;
+}
+.btn.btn-primary:focus-visible { outline-color: var(--text); }
 
 /* Editor */
 main {

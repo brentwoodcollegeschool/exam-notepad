@@ -3,7 +3,7 @@
 // stale/mismatched mix of old-JS-with-new-HTML (the exact bug this app hit
 // once already) can't happen — offline visitors always get one coherent,
 // complete snapshot, never a partial mix of two different deploys.
-const CACHE_NAME = "exam-notepad-v12";
+const CACHE_NAME = "exam-notepad-v13";
 const ASSETS = [
   "./",
   "./index.html",
