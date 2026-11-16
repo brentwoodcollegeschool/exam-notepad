@@ -17,6 +17,10 @@ working once Google removed the Chrome Apps platform.
 - Live line, word, and character counts in the status bar
 - Auto-saves your draft locally as you type, and offers to restore it if the page is closed or
   crashes before you save
+- **Help > Reload page (keeps my text)** — a one-click fix for a stuck print preview (or any
+  odd behaviour): saves the draft, reloads with no "Leave site?" prompt, and puts the text
+  straight back with no "Restore it" step. (Ctrl+Shift+R also works while a print preview is
+  frozen; the button needs Esc pressed first because Chrome blocks clicks behind the dialog.)
 - **Read Aloud** — text-to-speech for the whole document or just the selected text, with voice
   and speed controls
 - **Dictate** — speech-to-text typing at the cursor (needs an internet connection)
@@ -64,7 +68,7 @@ npm test
 - **Regression guard for the exact bug class that's bitten this app before**: every element id
   `app.js` looks up with `getElementById` is checked against the live DOM, and the page is checked
   for zero console errors/uncaught exceptions on load. (This is what would have caught the
-  service-worker/stale-cache mismatch that silently broke Theme, Special Characters, Read Aloud,
+  service-worker/stale-cache mismatch that silently broke Theme, Accents & Symbols, Read Aloud,
   and Dictate in an earlier version — a null-reference crash partway through the script had
   silently skipped every listener registered after it.)
 - Every toolbar button is clickable without throwing
@@ -74,6 +78,8 @@ npm test
 - Font-size keyboard shortcuts (Ctrl +/−/0)
 - The recovery banner: shows a preview of a leftover draft, restores it, and discarding it clears
   it for good (so it isn't handed to the next student who sits at the same Chromebook)
+- Help > Reload page: the text is silently restored after the reload, with no leave-site prompt,
+  and a later manual refresh goes back to the normal recovery banner
 - Autosave writes to local storage after the debounce
 - Printing: the full document (not just what's scrolled into view) gets mirrored into the print
   view, and the page title is blanked and restored correctly around the print

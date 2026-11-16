@@ -76,7 +76,31 @@
     }, 600);
   }
 
+  // Silent restore after the Help > "Reload page" button: the URL carries a
+  // one-shot ?reset=<timestamp> marker. We strip it immediately so a later
+  // manual refresh behaves normally (banner, not silent restore).
+  function consumeResetMarker() {
+    try {
+      const url = new URL(location.href);
+      if (!url.searchParams.has("reset")) return false;
+      url.searchParams.delete("reset");
+      history.replaceState(null, "", url.pathname + url.search + url.hash);
+      return true;
+    } catch (e) { return false; }
+  }
+
+  function silentRestore() {
+    let draft;
+    try { draft = JSON.parse(localStorage.getItem(DRAFT_KEY)); } catch (e) { return false; }
+    if (!draft || !draft.text) return false;
+    editor.value = draft.text;
+    updateStatus();
+    markDirty();
+    return true;
+  }
+
   function checkRecovery() {
+    if (consumeResetMarker() && silentRestore()) return;
     let raw;
     try { raw = localStorage.getItem(DRAFT_KEY); } catch (e) { return; }
     if (!raw) return;
@@ -115,6 +139,28 @@
       e.preventDefault();
       e.returnValue = "";
     }
+  });
+
+  // ---------- Reload page (fixes a stuck print preview) ----------
+  // Writes the draft synchronously (no waiting on the autosave debounce),
+  // verifies it, then reloads with a cache-busting URL (like Ctrl+Shift+R).
+  // `dirty` is cleared first so Chrome's "Leave site?" prompt doesn't fire.
+  document.getElementById("btnReload").addEventListener("click", () => {
+    clearTimeout(autosaveTimer);
+    if (editor.value.trim()) {
+      try {
+        const payload = JSON.stringify({ text: editor.value, ts: Date.now() });
+        localStorage.setItem(DRAFT_KEY, payload);
+        if (localStorage.getItem(DRAFT_KEY) !== payload) throw new Error("verify failed");
+      } catch (e) {
+        showToast("Couldn't safely back up your text, so the page was NOT reloaded. Please Save (Ctrl+S) first.", 6000);
+        return;
+      }
+    }
+    dirty = false;
+    const url = new URL(location.href);
+    url.searchParams.set("reset", String(Date.now()));
+    location.replace(url.toString());
   });
 
   // ---------- New / Open / Save ----------
@@ -256,9 +302,7 @@
   }
 
   // ---------- Font size ----------
-  // No toolbar buttons for this (kept off the toolbar deliberately), but the
-  // keyboard shortcuts still work — mainly so text size stays reachable as
-  // an accessibility fallback without cluttering the UI.
+  // Reachable from the View menu and via keyboard shortcuts (Ctrl +/−/0).
   let fontSize = parseInt(localStorage.getItem(FONT_KEY), 10) || FONT_DEFAULT;
 
   function applyEditorStyle() {
@@ -278,6 +322,34 @@
   }
 
   applyEditorStyle();
+  document.getElementById("btnFontUp").addEventListener("click", () => changeFontSize(FONT_STEP));
+  document.getElementById("btnFontDown").addEventListener("click", () => changeFontSize(-FONT_STEP));
+  document.getElementById("btnFontReset").addEventListener("click", resetFontSize);
+
+  // ---------- Dropdown menus (File, View) ----------
+  const menus = [...document.querySelectorAll(".menu")];
+  function closeMenus(except) {
+    menus.forEach((m) => {
+      if (m === except) return;
+      m.querySelector(".menu-panel").classList.add("hidden");
+      m.querySelector(".menu-trigger").setAttribute("aria-expanded", "false");
+    });
+  }
+  menus.forEach((m) => {
+    const trigger = m.querySelector(".menu-trigger");
+    const panel = m.querySelector(".menu-panel");
+    trigger.addEventListener("click", (e) => {
+      e.stopPropagation();
+      closeMenus(m);
+      const open = panel.classList.toggle("hidden") === false;
+      trigger.setAttribute("aria-expanded", String(open));
+    });
+    // Runs after the item's own handler (bubbling), so the action still fires.
+    panel.addEventListener("click", () => closeMenus());
+  });
+  document.addEventListener("click", () => closeMenus());
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeMenus(); });
+  window.addEventListener("blur", () => closeMenus());
 
   // ---------- Theme ----------
   function applyTheme(theme) {
@@ -381,6 +453,7 @@
     return editor.value;
   }
 
+  const btnStopReading = document.getElementById("btnStopReading");
   const readIconPlay = btnReadAloud.querySelector(".icon-play");
   const readIconPause = btnReadAloud.querySelector(".icon-pause");
   const readLabel = btnReadAloud.querySelector(".btn-label");
@@ -391,6 +464,8 @@
     readIconPlay.classList.toggle("hidden", playing);
     readIconPause.classList.toggle("hidden", !playing);
     readLabel.textContent = playing ? "Pause" : "Read Aloud";
+    // Stop is only useful while reading is active or paused.
+    btnStopReading.classList.toggle("hidden", state === "idle");
   }
 
   function readAloud() {
@@ -420,7 +495,7 @@
 
   btnReadAloud.addEventListener("click", readAloud);
   btnReadAloud.addEventListener("dblclick", () => openModal(modalSpeech));
-  document.getElementById("btnStopReading").addEventListener("click", () => {
+  btnStopReading.addEventListener("click", () => {
     if (synth) synth.cancel();
     updateReadBtn("idle");
   });
@@ -508,6 +583,7 @@
     if (k === "s" && e.shiftKey) { e.preventDefault(); saveFile(true); }
     else if (k === "s") { e.preventDefault(); saveFile(false); }
     else if (k === "o" && e.shiftKey) { e.preventDefault(); openFile(); }
+    else if (k === "p" && !e.shiftKey) { e.preventDefault(); window.print(); }
     else if (k === "=" || k === "+") { e.preventDefault(); changeFontSize(FONT_STEP); }
     else if (k === "-") { e.preventDefault(); changeFontSize(-FONT_STEP); }
     else if (k === "0") { e.preventDefault(); resetFontSize(); }

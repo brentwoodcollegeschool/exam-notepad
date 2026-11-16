@@ -3,7 +3,7 @@
 // stale/mismatched mix of old-JS-with-new-HTML (the exact bug this app hit
 // once already) can't happen — offline visitors always get one coherent,
 // complete snapshot, never a partial mix of two different deploys.
-const CACHE_NAME = "exam-notepad-v3";
+const CACHE_NAME = "exam-notepad-v12";
 const ASSETS = [
   "./",
   "./index.html",
@@ -40,6 +40,6 @@ self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET") return;
 
   event.respondWith(
-    fetch(event.request).catch(() => caches.open(CACHE_NAME).then((cache) => cache.match(event.request)))
+    fetch(event.request).catch(() => caches.open(CACHE_NAME).then((cache) => cache.match(event.request, { ignoreSearch: true })))
   );
 });

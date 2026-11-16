@@ -46,10 +46,22 @@ test.describe("page load integrity", () => {
       window.print = () => {};
     });
     await page.goto("/index.html");
-    const buttons = await page.locator("header.toolbar button").all();
-    expect(buttons.length).toBeGreaterThan(5);
+    // Menu items live inside collapsed dropdowns: open each menu first.
+    const items = [];
+    for (const trigger of await page.locator(".menu-trigger").all()) {
+      await trigger.click();
+      for (const it of await trigger.locator("xpath=following-sibling::*//button").all()) {
+        await it.click();
+        const closeModal = page.locator(".modal:not(.hidden) [data-close]");
+        if (await closeModal.isVisible().catch(() => false)) await closeModal.click();
+        await trigger.click();
+      }
+      await trigger.click();
+    }
+    const buttons = await page.locator("header.toolbar > .toolbar-group > button, header.toolbar .toolbar-group > button").all();
+    expect(buttons.length).toBeGreaterThan(3);
     for (const btn of buttons) {
-      if (await btn.isDisabled()) continue;
+      if (await btn.isDisabled() || !(await btn.isVisible())) continue;
       await btn.click({ trial: false }).catch(() => {});
       // Dismiss anything a click may have opened (modals, native confirm
       // dialogs are auto-dismissed by Playwright's default dialog handler).
@@ -82,6 +94,7 @@ test.describe("writing", () => {
     const editor = page.locator("#editor");
     await editor.fill("cafe");
     await editor.evaluate((el) => el.setSelectionRange(4, 4));
+    await page.locator("#menuEdit").click();
     await page.locator("#btnSpecialChars").click();
     await page.getByRole("button", { name: "é", exact: true }).click();
     await expect(editor).toHaveValue("cafeé");
@@ -93,6 +106,7 @@ test.describe("writing", () => {
     const editor = page.locator("#editor");
     await editor.fill("first");
     await editor.pressSequentially(" second");
+    await page.locator("#menuEdit").click();
     await page.locator("#btnUndo").click();
     await expect(errors).toEqual([]);
   });
@@ -101,6 +115,7 @@ test.describe("writing", () => {
 test.describe("theme", () => {
   test("theme toggle applies dark class and persists across reload", async ({ page }) => {
     await page.goto("/index.html");
+    await page.locator("#menuView").click();
     await page.locator("#btnTheme").click();
     await expect(page.locator("body")).toHaveClass(/theme-dark/);
     await page.reload();
@@ -123,6 +138,35 @@ test.describe("font size shortcuts", () => {
     await page.keyboard.press("Control+0");
     const reset = await getFontSize();
     expect(reset).toBe("18px");
+  });
+});
+
+test.describe("print shortcut", () => {
+  test("Ctrl+P calls print from the page (kiosk-safe)", async ({ page }) => {
+    await page.addInitScript(() => { window.__prints = 0; window.print = () => { window.__prints++; }; });
+    await page.goto("/index.html");
+    await page.locator("#editor").click();
+    await page.keyboard.press("Control+p");
+    expect(await page.evaluate(() => window.__prints)).toBe(1);
+  });
+});
+
+test.describe("reload page button", () => {
+  test("reloads with no dialog and silently restores the text", async ({ page }) => {
+    let dialogs = 0;
+    page.on("dialog", (d) => { dialogs++; d.dismiss(); });
+    await page.goto("/index.html");
+    await page.locator("#editor").fill("my exam answer");
+    await page.locator("#btnHelp").click();
+    await Promise.all([page.waitForNavigation(), page.locator("#btnReload").click()]);
+    await expect(page.locator("#editor")).toHaveValue("my exam answer");
+    await expect(page.locator("#recoveryBanner")).toBeHidden();
+    expect(page.url()).not.toContain("reset=");
+    expect(dialogs).toBe(0);
+    // a later manual refresh falls back to the normal banner
+    await page.locator("#editor").fill("");
+    await page.reload();
+    await expect(page.locator("#recoveryBanner")).toBeVisible();
   });
 });
 
@@ -209,9 +253,15 @@ test.describe("speech features degrade safely", () => {
     const errors = watchForErrors(page);
     await page.goto("/index.html");
     await page.locator("#editor").fill("testing read aloud");
+    // Stop is hidden until reading starts
+    await expect(page.locator("#btnStopReading")).toBeHidden();
     await page.locator("#btnReadAloud").click();
     await page.waitForTimeout(300);
-    await page.locator("#btnStopReading").click();
+    // (headless Chrome may have no speech engine; then Stop correctly stays hidden)
+    if (await page.locator("#btnStopReading").isVisible()) {
+      await page.locator("#btnStopReading").click();
+      await expect(page.locator("#btnStopReading")).toBeHidden();
+    }
     expect(errors).toEqual([]);
   });
 
@@ -239,7 +289,9 @@ test.describe("content security policy", () => {
     });
     await page.goto("/index.html");
     await page.locator("#editor").fill("csp check");
+    await page.locator("#menuView").click();
     await page.locator("#btnTheme").click();
+    await page.locator("#menuEdit").click();
     await page.locator("#btnSpecialChars").click();
     await page.locator(".modal:not(.hidden) [data-close]").click();
     expect(violations).toEqual([]);

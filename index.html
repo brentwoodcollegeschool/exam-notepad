@@ -29,24 +29,24 @@
 
   <header class="toolbar no-print">
     <div class="toolbar-group">
-      <button id="btnNew" class="btn" title="New document">New</button>
-      <button id="btnOpen" class="btn" title="Open a text file from disk (Ctrl+Shift+O)">Open</button>
-      <button id="btnSave" class="btn" title="Save (Ctrl+S)">Save</button>
-      <button id="btnSaveAs" class="btn" title="Save as a new file (Ctrl+Shift+S)">Save As</button>
-    </div>
-    <div class="toolbar-divider"></div>
-    <div class="toolbar-group">
-      <button id="btnPrint" class="btn" title="Print (Ctrl+P)">Print</button>
-    </div>
-    <div class="toolbar-divider"></div>
-    <div class="toolbar-group">
-      <button id="btnUndo" class="btn" title="Undo (Ctrl+Z)">Undo</button>
-      <button id="btnRedo" class="btn" title="Redo (Ctrl+Y)">Redo</button>
-      <button id="btnSpecialChars" class="btn" title="Insert accented and special characters">Special Characters</button>
-    </div>
-    <div class="toolbar-divider"></div>
-    <div class="toolbar-group">
-      <button id="btnTheme" class="btn" title="Toggle light/dark theme">Theme</button>
+      <div class="menu">
+        <button id="menuFile" class="btn menu-trigger" aria-haspopup="true" aria-expanded="false" aria-controls="panelFile">File <span class="caret" aria-hidden="true"></span></button>
+        <div id="panelFile" class="menu-panel hidden" role="menu">
+          <button id="btnNew" class="menu-item" role="menuitem" title="New document">New</button>
+          <button id="btnOpen" class="menu-item" role="menuitem" title="Open a text file from disk (Ctrl+Shift+O)">Open&hellip; <span class="menu-key">Ctrl+Shift+O</span></button>
+          <button id="btnSave" class="menu-item" role="menuitem" title="Save (Ctrl+S)">Save <span class="menu-key">Ctrl+S</span></button>
+          <button id="btnSaveAs" class="menu-item" role="menuitem" title="Save as a new file (Ctrl+Shift+S)">Save As&hellip; <span class="menu-key">Ctrl+Shift+S</span></button>
+        </div>
+      </div>
+      <div class="menu">
+        <button id="menuEdit" class="btn menu-trigger" aria-haspopup="true" aria-expanded="false" aria-controls="panelEdit">Edit <span class="caret" aria-hidden="true"></span></button>
+        <div id="panelEdit" class="menu-panel hidden" role="menu">
+          <button id="btnUndo" class="menu-item" role="menuitem" title="Undo (Ctrl+Z)">Undo <span class="menu-key">Ctrl+Z</span></button>
+          <button id="btnRedo" class="menu-item" role="menuitem" title="Redo (Ctrl+Y)">Redo <span class="menu-key">Ctrl+Y</span></button>
+          <button id="btnSpecialChars" class="menu-item" role="menuitem" title="Insert accented letters and symbols">Accents &amp; Symbols&hellip;</button>
+        </div>
+      </div>
+      <button id="btnPrint" class="btn" title="Print">Print</button>
     </div>
     <div class="toolbar-divider"></div>
     <div class="toolbar-group">
@@ -55,7 +55,7 @@
         <svg class="icon icon-pause hidden" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 5h4v14H6zm8 0h4v14h-4z"/></svg>
         <span class="btn-label">Read Aloud</span>
       </button>
-      <button id="btnStopReading" class="btn" title="Stop reading">
+      <button id="btnStopReading" class="btn hidden" title="Stop reading">
         <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6h12v12H6z"/></svg>
         <span class="btn-label">Stop</span>
       </button>
@@ -66,6 +66,15 @@
       </button>
     </div>
     <div class="toolbar-group toolbar-right">
+      <div class="menu">
+        <button id="menuView" class="btn menu-trigger" aria-haspopup="true" aria-expanded="false" aria-controls="panelView">View <span class="caret" aria-hidden="true"></span></button>
+        <div id="panelView" class="menu-panel menu-panel-right hidden" role="menu">
+          <button id="btnTheme" class="menu-item" role="menuitem" title="Toggle light/dark theme">Light / Dark theme</button>
+          <button id="btnFontUp" class="menu-item" role="menuitem">Larger text <span class="menu-key">Ctrl +</span></button>
+          <button id="btnFontDown" class="menu-item" role="menuitem">Smaller text <span class="menu-key">Ctrl &minus;</span></button>
+          <button id="btnFontReset" class="menu-item" role="menuitem">Reset text size <span class="menu-key">Ctrl 0</span></button>
+        </div>
+      </div>
       <button id="btnHelp" class="btn" title="Help and keyboard shortcuts">Help</button>
     </div>
   </header>
@@ -98,43 +107,40 @@
 
   <div id="modalOverlay" class="modal-overlay hidden no-print">
 
-    <div id="modalHelp" class="modal hidden" role="dialog" aria-labelledby="helpTitle">
+    <div id="modalHelp" class="modal modal-help hidden" role="dialog" aria-labelledby="helpTitle">
       <div class="modal-head">
-        <h2 id="helpTitle">Help &amp; Shortcuts</h2>
+        <h2 id="helpTitle">Help</h2>
         <button class="btn modal-close" data-close>Close</button>
       </div>
       <div class="modal-body">
-        <h3>Writing</h3>
-        <ul>
-          <li><b>New</b> — start a blank document</li>
-          <li><b>Special Characters</b> — click to insert accented letters and symbols</li>
-          <li>Spelling is checked by your browser's built-in spellchecker (red underline)</li>
-          <li>Line, word, and character counts are always shown at the bottom of the screen</li>
+        <h3 class="help-title">How do I&hellip;</h3>
+        <ul class="how">
+          <li><span>Print</span><span class="where">Click <b>Print</b></span></li>
+          <li><span>Undo a mistake</span><span class="where">Edit &#9656; Undo</span></li>
+          <li><span>Type an accent (&eacute;, &ntilde;) or symbol</span><span class="where">Edit &#9656; Accents &amp; Symbols</span></li>
+          <li><span>Make the text bigger or smaller</span><span class="where">View &#9656; Larger / Smaller text</span></li>
+          <li><span>Hear my writing read out loud</span><span class="where">Click <b>Read Aloud</b></span></li>
+          <li><span>Speak instead of typing</span><span class="where">Click <b>Dictate</b></span></li>
+          <li><span>Start over with a blank page</span><span class="where">File &#9656; New</span></li>
         </ul>
-        <h3>Saving, Opening &amp; Printing</h3>
-        <ul>
-          <li><b>Save</b> (Ctrl+S) — saves to the same file, or asks where to save the first time</li>
-          <li><b>Save As</b> (Ctrl+Shift+S) — always asks where to save a new copy</li>
-          <li><b>Open</b> (Ctrl+Shift+O) — opens a .txt file from disk or USB drive</li>
-          <li><b>Print</b> (Ctrl+P) — prints cleanly, without the toolbar</li>
-          <li>Your work is auto-saved in the browser as you type, and offered back to you if the page is closed or crashes before you save</li>
-        </ul>
-        <h3>Display</h3>
-        <ul>
-          <li>Text size can be adjusted with <b>Ctrl +</b> / <b>Ctrl &minus;</b>, and reset with <b>Ctrl 0</b></li>
-          <li><b>Theme</b> — switch between light and dark</li>
-        </ul>
-        <h3>Speech</h3>
-        <ul>
-          <li><b>Read Aloud</b> — reads the selected text, or the whole document if nothing is selected. Click again to pause/resume.</li>
-          <li><b>Dictate</b> — turns on the microphone and types what you say at the cursor. Click again to stop. Requires microphone access and an internet connection.</li>
-        </ul>
+
+        <div class="help-callout">
+          <div class="help-callout-text">
+            <h3>Something stuck?</h3>
+            <p>If printing freezes on &ldquo;Loading preview&rdquo; or the page stops responding:</p>
+            <ol>
+              <li>Press <kbd>Esc</kbd> on the keyboard.</li>
+              <li>Click the blue button. Your writing comes straight back.</li>
+            </ol>
+          </div>
+          <button id="btnReload" class="btn btn-primary">Reload page<br><small>(keeps my text)</small></button>
+        </div>
       </div>
     </div>
 
     <div id="modalChars" class="modal hidden" role="dialog" aria-labelledby="charsTitle">
       <div class="modal-head">
-        <h2 id="charsTitle">Special Characters</h2>
+        <h2 id="charsTitle">Accents &amp; Symbols</h2>
         <button class="btn modal-close" data-close>Close</button>
       </div>
       <div class="modal-body">
